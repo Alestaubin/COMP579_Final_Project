@@ -1,2 +1,6 @@
-.DS_Store
+**/.DS_Store
 .env
+.idea
+.vscode
+/bin/
+__pycache__
