@@ -185,41 +185,6 @@ wheels = [
 ]
 
 [[package]]
-name = "comp579-final-project"
-version = "0.0.0"
-source = { editable = "." }
-dependencies = [
-    { name = "abides-core" },
-    { name = "abides-gym" },
-    { name = "abides-markets" },
-    { name = "coloredlogs" },
-    { name = "gym" },
-    { name = "numpy" },
-    { name = "pomegranate" },
-    { name = "ray", extra = ["rllib"] },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "abides-core", directory = "vendor/abides-jpmc-public/abides-core" },
-    { name = "abides-gym", directory = "vendor/abides-jpmc-public/abides-gym" },
-    { name = "abides-markets", directory = "vendor/abides-jpmc-public/abides-markets" },
-    { name = "coloredlogs", specifier = "==15.0.1" },
-    { name = "gym", specifier = "==0.23.0" },
-    { name = "numpy", specifier = "==1.22.0" },
-    { name = "pomegranate", specifier = "==0.15.0" },
-    { name = "ray", extras = ["rllib"], specifier = ">=2.44.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "ruff", specifier = ">=0.11.2" }]
-
-[[package]]
 name = "cython"
 version = "3.0.12"
 source = { registry = "https://pypi.org/simple" }
@@ -755,6 +720,41 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/9f/05/69a8e27c90e864062cfc8cad8ad703810e6eb86737f1d88c6414b0aa9700/ormsgpack-1.7.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:65525438b4a8b3b64ccfcda25e758ea3db392d1c206b5e09ef70efbbafa6dbf9", size = 220617 },
     { url = "https://files.pythonhosted.org/packages/5f/2d/9085f96865adf59daedac1171c376eed4ffe25ff45363a13ce5a87ff6005/ormsgpack-1.7.0-cp39-cp39-win_amd64.whl", hash = "sha256:0d88307ab45d95416ce4071b1b99326ca31362af01c3d206f15a0551a7a874bd", size = 125194 },
 ]
+
+[[package]]
+name = "oterl"
+version = "0.0.0"
+source = { editable = "." }
+dependencies = [
+    { name = "abides-core" },
+    { name = "abides-gym" },
+    { name = "abides-markets" },
+    { name = "coloredlogs" },
+    { name = "gym" },
+    { name = "numpy" },
+    { name = "pomegranate" },
+    { name = "ray", extra = ["rllib"] },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "abides-core", directory = "vendor/abides-jpmc-public/abides-core" },
+    { name = "abides-gym", directory = "vendor/abides-jpmc-public/abides-gym" },
+    { name = "abides-markets", directory = "vendor/abides-jpmc-public/abides-markets" },
+    { name = "coloredlogs", specifier = "==15.0.1" },
+    { name = "gym", specifier = "==0.23.0" },
+    { name = "numpy", specifier = "==1.22.0" },
+    { name = "pomegranate", specifier = "==0.15.0" },
+    { name = "ray", extras = ["rllib"], specifier = ">=2.44.1" },
+]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.11.2" }]
 
 [[package]]
 name = "packaging"
