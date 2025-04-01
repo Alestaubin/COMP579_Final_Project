@@ -15,10 +15,21 @@ dependencies = [
   "ray[rllib]>=2.44.1",
 ]
 
-[tool.uv.sources]
-abides-core = { path = "vendor/abides-jpmc-public/abides-core" }
-abides-gym = { path = "vendor/abides-jpmc-public/abides-gym" }
-abides-markets = { path = "vendor/abides-jpmc-public/abides-markets" }
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = ["ruff>=0.11.2"]
+
+[project.scripts]
+oterl = "oterl.__main__:main"
+
+[tool.hatch.build.targets.sdist]
+include = ["/src"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/oterl"]
 
 [tool.ruff]
 src = ["src"]
@@ -36,5 +47,7 @@ docstring-code-line-length = 20
 indent-style = "space"
 quote-style = "single"
 
-[dependency-groups]
-dev = ["ruff>=0.11.2"]
+[tool.uv.sources]
+abides-core = { path = "vendor/abides-jpmc-public/abides-core" }
+abides-gym = { path = "vendor/abides-jpmc-public/abides-gym" }
+abides-markets = { path = "vendor/abides-jpmc-public/abides-markets" }

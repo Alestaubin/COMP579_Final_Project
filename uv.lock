@@ -187,7 +187,7 @@ wheels = [
 [[package]]
 name = "comp579-final-project"
 version = "0.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "abides-core" },
     { name = "abides-gym" },
