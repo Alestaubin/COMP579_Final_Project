@@ -1,0 +1,3 @@
+[submodule "vendor/abides-jpmc-public"]
+	path = vendor/abides-jpmc-public
+	url = https://github.com/jpmorganchase/abides-jpmc-public

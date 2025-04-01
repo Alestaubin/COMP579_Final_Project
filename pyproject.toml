@@ -1,0 +1,39 @@
+[project]
+name = "comp579-final-project"
+version = "0.0.0"
+description = "Final project for COMP579"
+readme = "README.md"
+requires-python = ">=3.9.0"
+dependencies = [
+  "abides-core",
+  "abides-gym",
+  "abides-markets",
+  "coloredlogs==15.0.1",
+  "gym==0.23.0",
+  "numpy==1.22.0",
+  "pomegranate==0.15.0",
+  "ray[rllib]>=2.44.1",
+]
+
+[tool.uv.sources]
+abides-core = { path = "vendor/abides-jpmc-public/abides-core" }
+abides-gym = { path = "vendor/abides-jpmc-public/abides-gym" }
+abides-markets = { path = "vendor/abides-jpmc-public/abides-markets" }
+
+[tool.ruff]
+src = ["src"]
+indent-width = 2
+line-length = 100
+exclude = [".git", ".venv", "__pycache__", "vendor"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 20
+indent-style = "space"
+quote-style = "single"
+
+[dependency-groups]
+dev = ["ruff>=0.11.2"]
