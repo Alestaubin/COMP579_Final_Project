@@ -28,6 +28,7 @@ exclude = [".git", ".venv", "__pycache__", "vendor"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+ignore = ["I001", "F401"]
 
 [tool.ruff.format]
 docstring-code-format = true
