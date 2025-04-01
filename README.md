@@ -10,5 +10,5 @@ echo -e "ray[rllib]==1.8.0\npomegranate==0.15.0\ncoloredlogs==15.0.1\ngym==0.23.
 pip install -r requirements.txt
 pip install "protobuf<3.21"
 cd ..
-python test.py
+python tester.py
 ```
