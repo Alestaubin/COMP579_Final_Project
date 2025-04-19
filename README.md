@@ -1,3 +1,89 @@
+## Modify the following files
+In `.venv/lib/python3.9/site-packages/abides_gym/envs/core_environment.py`, comment out lines 146-148:
+```
+    # assert self.observation_space.contains(
+    #     self.state
+    # ), f"INVALID STATE {self.state}"
+```
+In `.venv/lib/python3.9/site-packages/abides_gym/envs/markets_daily_investor_environment_v0.py`, replace the method `raw_state_to_state` by
+```
+   def raw_state_to_state(self, raw_state: Dict[str, Any]) -> np.ndarray:
+        """
+        method that transforms a raw state into a state representation
+
+        Arguments:
+            - raw_state: dictionnary that contains raw simulation information obtained from the gym experimental agent
+
+        Returns:
+            - state: state representation defining the MDP for the daily investor v0 environnement
+        """
+        # 0)  Preliminary
+        bids = raw_state["parsed_mkt_data"]["bids"]
+        asks = raw_state["parsed_mkt_data"]["asks"]
+        last_transactions = raw_state["parsed_mkt_data"]["last_transaction"]
+
+        # 1) Holdings
+        holdings = raw_state["internal_data"]["holdings"]
+
+        # 2) Imbalance
+        imbalances = [
+            markets_agent_utils.get_imbalance(b, a, depth=3)
+            for (b, a) in zip(bids, asks)
+        ]
+        # 3) Returns
+        mid_prices = [
+            markets_agent_utils.get_mid_price(b, a, lt)
+            for (b, a, lt) in zip(bids, asks, last_transactions)
+        ]
+        returns = np.diff(mid_prices)
+        padded_returns = np.zeros(self.state_history_length - 1)
+        padded_returns[-len(returns) :] = (
+            returns if len(returns) > 0 else padded_returns
+        )
+
+        # 4) Spread
+        best_bids = [
+            bids[0][0] if len(bids) > 0 else mid
+            for (bids, mid) in zip(bids, mid_prices)
+        ]
+        best_asks = [
+            asks[0][0] if len(asks) > 0 else mid
+            for (asks, mid) in zip(asks, mid_prices)
+        ]
+        spreads = np.array(best_asks) - np.array(best_bids)
+
+        # 5) direction feature
+        direction_features = np.array(mid_prices) - np.array(last_transactions)
+        #6) Compute State (Holdings, Imbalance, Spread, DirectionFeature + Returns)
+
+        N = 10  # Number of levels to include
+        latest_bids = bids[-1] if bids else []
+        latest_asks = asks[-1] if asks else []
+
+        bid_prices = [p for (p, v) in latest_bids[:N]]
+        bid_volumes = [v for (p, v) in latest_bids[:N]]
+        ask_prices = [p for (p, v) in latest_asks[:N]]
+        ask_volumes = [v for (p, v) in latest_asks[:N]]
+
+        # Padding if fewer than N levels
+        bid_prices += [0] * (N - len(bid_prices))
+        bid_volumes += [0] * (N - len(bid_volumes))
+        ask_prices += [0] * (N - len(ask_prices))
+        ask_volumes += [0] * (N - len(ask_volumes))
+
+        # 7) Compute State
+        computed_state = np.array(
+            [holdings[-1], imbalances[-1], spreads[-1], direction_features[-1]]
+            + padded_returns.tolist()
+            + bid_prices + bid_volumes
+            + ask_prices + ask_volumes,
+            dtype=np.float32,
+        )
+        return computed_state.reshape(
+            self.num_state_features + 4 * N, 1
+        )  
+```
+
 ## oterl
 
 **oterl** (**Optimal Trade Execution Reinforcement Learning**) contains the code 

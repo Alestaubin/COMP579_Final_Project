@@ -2,3 +2,72 @@ To install new package: `uv run -- uv pip install skrl["torch"]`
 
 The function that computes the state variables is:
 abides-jpmc-public/abides-gym/abides_gym/envs/markets_execution_environment_v0.py::raw_state_to_state()
+
+
+raw_state:
+
+{'done': False, 
+'result': 
+deque([
+{
+'parsed_mkt_data': 
+deque([
+{'bids': [(100011, 83), (100010, 37), (100009, 100), (100008, 75), (99997, 43), (99996, 37), 
+(99991, 100), (99986, 43), (99982, 37), (99981, 6)], 'asks': [(100012, 347), (100013, 213), (100014, 114), (100017, 100), (100019, 340), 
+(100021, 93), (100022, 47), (100023, 32), (100026, 47), (100027, 37)], 'last_transaction': 100011, 'exchange_ts': 1612517639384925264}, 
+
+{'bids': [(100009, 100), (100008, 175), (100004, 45), (99997, 88), (99991, 100), (99990, 45), (99986, 43), (99983, 45), (99981, 6), (99976, 45)], 
+'asks': [(100011, 72), (100012, 292), (100013, 213), (100014, 114), (100017, 100), (100019, 385), (100021, 93), (100022, 47), (100023, 32), 
+(100026, 92)], 'last_transaction': 100011, 'exchange_ts': 1612517650874175768}, 
+
+{'bids': [(100010, 45), (100009, 100), (100008, 175), (100001, 45), 
+(99997, 43), (99992, 45), (99991, 100), (99986, 43), (99983, 45), (99981, 6)], 'asks': [(100011, 117), (100012, 247), (100013, 213), (100014, 114), 
+(100017, 100), (100019, 300), (100020, 45), (100021, 93), (100022, 47), (100023, 32)], 'last_transaction': 100011, 'exchange_ts': 1612517653039962910},
+
+{'bids': [(100008, 175), (100001, 45), (99997, 43), (99992, 45), (99991, 100), (99986, 43), (99983, 45), (99981, 6), (99975, 43), (99974, 45)], 
+'asks': [(100010, 196), (100011, 117), (100012, 247), (100013, 213), (100014, 114), (100017, 100), (100019, 300), (100020, 45), (100021, 93), 
+(100022, 47)], 'last_transaction': 100010, 'exchange_ts': 1612517657303570408}, 
+
+{'bids': [(100008, 75), (100001, 45), (99997, 43), (99992, 45), 
+(99991, 100), (99986, 43), (99983, 45), (99981, 6), (99975, 43), (99974, 45)], 'asks': [(100010, 196), (100011, 117), (100012, 247), (100013, 213), 
+(100014, 114), (100017, 100), (100019, 300), (100020, 45), (100021, 93), (100022, 43)], 'last_transaction': 100008, 'exchange_ts': 1612517661613403168}
+], maxlen=5), 
+
+'internal_data': {'holdings': 0, 'cash': 1000000, 'inter_wakeup_executed_orders': [], 'episode_executed_orders': [(Agent 1117 @ 2021-02-05 09:35:00) : MKT Order BID 10 ABM], 
+'parsed_episode_executed_orders': [(10, 99992)], 'parsed_inter_wakeup_executed_orders': [], 'starting_cash': 1000000, 'current_time': 1612517700000000000, 
+'order_status': {427: {'status': 'mkt_immediately_filled', 'order': (Agent 1117 @ 2021-02-05 09:35:00) : MKT Order BID 10 ABM, 'active_qty': 0, 
+'executed_qty': 10, 'cancelled_qty': 0}}, 'mkt_open': 1612517400000000000, 'mkt_close': 1612540800000000000}, 'parsed_volume_data': deque([{'last_transaction': 100011, 
+'exchange_ts': 1612517639384925264, 'bid_volume': 1085, 'ask_volume': 725, 'total_volume': 1810}, {'last_transaction': 100011, 'exchange_ts': 1612517650874175768, 
+'bid_volume': 1087, 'ask_volume': 730, 'total_volume': 1817}, {'last_transaction': 100011, 'exchange_ts': 1612517653039962910, 'bid_volume': 987, 'ask_volume': 630, 
+'total_volume': 1617}, {'last_transaction': 100010, 'exchange_ts': 1612517657303570408, 'bid_volume': 1087, 'ask_volume': 575, 'total_volume': 1662}, 
+{'last_transaction': 100008, 'exchange_ts': 1612517661613403168, 'bid_volume': 987, 'ask_volume': 775, 'total_volume': 1762}], maxlen=5)
+}, 
+
+{
+'parsed_mkt_data': deque([{'bids': [(99983, 11), (99982, 100), (99981, 6), (99980, 34), (99978, 41), (99974, 34), (99972, 41), (99968, 34), (99966, 41), 
+(99962, 34)], 'asks': [(99984, 59), (99987, 34), (99990, 259), (99992, 188), (99993, 134), (99997, 98), (99999, 34), (100003, 41), (100005, 34), (100009, 84)], 
+'last_transaction': 99983, 'exchange_ts': 1612517720912907322}, {'bids': [(99982, 100), (99981, 6), (99980, 34), (99978, 41), (99974, 34), (99972, 41), (99968, 34), 
+(99966, 41), (99962, 34), (99960, 41)], 'asks': [(99983, 89), (99984, 71), (99987, 34), (99990, 259), (99992, 188), (99993, 134), (99997, 98), (99999, 34), 
+(100003, 41), (100005, 34)], 'last_transaction': 99983, 'exchange_ts': 1612517724766359939}, {'bids': [(99983, 188), (99982, 28), (99981, 6), (99980, 34), 
+(99978, 41), (99974, 34), (99972, 41), (99968, 34), (99966, 41), (99962, 34)], 'asks': [(99984, 71), (99987, 34), (99990, 259), (99992, 188), (99993, 34), 
+(99997, 98), (99999, 34), (100003, 41), (100005, 34), (100009, 84)], 'last_transaction': 99983, 'exchange_ts': 1612517733389947057}, {'bids': [(99983, 184), 
+(99982, 28), (99981, 6), (99980, 34), (99978, 41), (99974, 34), (99972, 41), (99968, 34), (99966, 41), (99962, 34)], 'asks': [(99984, 271), (99987, 34), 
+(99990, 259), (99992, 188), (99993, 34), (99997, 98), (99999, 34), (100003, 41), (100005, 34), (100009, 84)], 'last_transaction': 99984, 
+'exchange_ts': 1612517740889244035}, {'bids': [(99983, 84), (99982, 28), (99981, 6), (99980, 34), (99978, 41), (99974, 34), (99972, 41), (99968, 34), 
+(99966, 41), (99962, 34)], 'asks': [(99984, 171), (99987, 34), (99990, 259), (99992, 188), (99993, 34), (99997, 98), (99999, 34), (100003, 41), (100005, 34), 
+(100009, 84)], 'last_transaction': 99984, 'exchange_ts': 1612517749234008524}], maxlen=5), 'internal_data': {'holdings': 10, 'cash': 80, 
+'inter_wakeup_executed_orders': [(Agent 1117 @ 2021-02-05 09:35:00) : MKT Order BID 10 ABM], 'episode_executed_orders': [(Agent 1117 @ 2021-02-05 09:35:00) : MKT Order BID 10 ABM], 
+'parsed_episode_executed_orders': [(10, 99992)], 'parsed_inter_wakeup_executed_orders': [(10, 99992)], 'starting_cash': 1000000,
+'current_time': 1612517760000000000, 'order_status': {427: {'status': 'mkt_immediately_filled', 'order': (Agent 1117 @ 2021-02-05 09:35:00) : MKT Order BID 10 ABM, 
+'active_qty': 0, 'executed_qty': 10, 'cancelled_qty': 0}}, 'mkt_open': 1612517400000000000, 'mkt_close': 1612540800000000000}, 
+'parsed_volume_data': deque([{'last_transaction': 99983, 'exchange_ts': 1612517720912907322, 'bid_volume': 306, 'ask_volume': 1074, 'total_volume': 1380}, 
+{'last_transaction': 99983, 'exchange_ts': 1612517724766359939, 'bid_volume': 306, 'ask_volume': 1185, 'total_volume': 1491}, {'last_transaction': 99983, 
+'exchange_ts': 1612517733389947057, 'bid_volume': 199, 'ask_volume': 1276, 'total_volume': 1475}, {'last_transaction': 99984, 'exchange_ts': 1612517740889244035, 
+'bid_volume': 339, 'ask_volume': 1234, 'total_volume': 1573}, {'last_transaction': 99984, 'exchange_ts': 1612517749234008524, 'bid_volume': 439, 'ask_volume': 1246, 
+'total_volume': 1685}], maxlen=5)
+}
+], maxlen=4)}
+
+
+NOTES:
+in the raw_state, each tuple (price, quantity) in bids/asks represents a limit buy order at that price and volume.
