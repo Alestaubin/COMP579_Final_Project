@@ -1,11 +1,8 @@
 import yaml
-import abides_gym
 import gym
-from oterl.utils.cfg_utils import get_ppo_cartpole_cfg
-from oterl.models import Policy, Value
 from oterl.agents.baselines.trainer import train_agent
 from skrl.agents.torch.ppo import PPO
-from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
+from skrl.agents.torch.dqn import DQN
 
 from skrl.envs.wrappers.torch import wrap_env
 import pdb;pdb.set_trace()
