@@ -66,7 +66,7 @@ def main():
                     "step": 100_000
                 },
                 "lr":1e-3,
-                "num_epochs": 3,
+                "num_epochs": 50,
                 "num_game_per_batch":1,
                 "max_grad_norm": 0.5,
                 "n_mini_batch": 4,
@@ -75,8 +75,8 @@ def main():
                 "normalize_advantage": True,
             }
             writer_path = "runs"
-            save_path = "models"
-            trainer = Trainer(config=config,env=env,writer_path = writer_path,save_path=save_path)
+            save_path = "models/"
+            trainer = Trainer(config=config,env=env, writer_path = writer_path,save_path=save_path)
             trainer.train()
           else:
             print(f"Unknown agent: {agent}")
