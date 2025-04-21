@@ -10,9 +10,13 @@ dependencies = [
   "abides-markets",
   "coloredlogs==15.0.1",
   "gym==0.23.0",
-  "numpy==1.23.0",
+  "matplotlib>=3.8.4",
+  "numpy==1.22.0",
   "pomegranate==0.15.0",
   "ray[rllib]>=2.44.1",
+  "skrl>=1.4.3",
+  "torch==2.2.2",
+  "tqdm>=4.67.1",
 ]
 
 [build-system]
