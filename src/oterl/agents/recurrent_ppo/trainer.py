@@ -4,6 +4,8 @@ import torch.nn as nn
 import numpy as np
 import json
 import os
+import time
+from tqdm import tqdm
 
 torch.manual_seed(9999)
 np.random.seed(9999)
@@ -12,7 +14,7 @@ from oterl.agents.recurrent_ppo.model import LSTMPPOModel
 from oterl.agents.recurrent_ppo.agent import Agent
 from oterl.agents.recurrent_ppo.writer import Writer
 from oterl.agents.recurrent_ppo.distribution import Distribution
-
+from oterl.agents.recurrent_ppo.stat import Tester
 class Trainer:
     """Trainer class for training the model"""
     def __init__(self, config, env, writer_path=None,save_path=None):
@@ -61,7 +63,7 @@ class Trainer:
 
         self.entropy_coef = self.data["entropy_coef"]
         self.entropy_coef_step = (config['entropy_coef']["start"] - config['entropy_coef']['end']) / config['entropy_coef']['step']
-        
+        self.tester = Tester(env, self.agent)
 
     def _entropy_coef_schedule(self):
         self.entropy_coef -= self.entropy_coef_step
@@ -125,7 +127,7 @@ class Trainer:
 
             self.model.train()
 
-            for _ in range(self.config["num_epochs"]):
+            for i in tqdm(range(self.config["num_epochs"]), desc="Training epochs"):
                 mini_batch_generator = self.agent.rollout.mini_batch_generator()
 
                 for mini_batch in mini_batch_generator:
@@ -178,13 +180,15 @@ class Trainer:
                                     kl_max      = Kl.max().item(),
                                     kl_min      = Kl.min().item()
                                 )
-                                
+    
                                 self._save_log()
                         except:
                             pass
                         
-            if (self.data["step"]%200)==0:
+            if (self.data["step"]%50)==0:
                 self._save_model()
+                self.tester.test()
+
             self.agent.rollout.reset_data()
 
     def _save_model(self):
@@ -192,9 +196,18 @@ class Trainer:
         Overview:
             Saves the model and other data.
         """
-        torch.save(self.model.state_dict(), f'{self.save_path}model.pt')
-        with open(f"{self.save_path}stat.json","w") as f:
-                json.dump(self.data,f)
+        timestamp = time.strftime('%Y-%m-%d_%H-%M-%S')
+        save_dir = os.path.join(self.save_path, timestamp)
+
+        # Create the directory if it doesn't exist
+        os.makedirs(save_dir, exist_ok=True)
+
+        # Save model
+        torch.save(self.model.state_dict(), os.path.join(save_dir, f"model_{self.data['step']}.pt"))
+
+        # Save stats
+        with open(os.path.join(save_dir, f"stat_{self.data['step']}.json"), "w") as f:
+            json.dump(self.data, f)
 
     def _save_log(self):
         self.data["step"]+=1

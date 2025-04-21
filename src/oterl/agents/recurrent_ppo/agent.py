@@ -42,7 +42,7 @@ class Agent():
         self.v_state = torch.zeros(1, 1, self.hidden_size)
 
     @torch.no_grad()
-    def play(self, state):
+    def play(self, state, testing=False):
         """
         Overview:
             Agent's play function.
@@ -70,47 +70,48 @@ class Agent():
             action = np.random.choice(np.where(list_action == 1)[0])
         
         obs, reward, done, info = self.env.step(action)
+        
+        if not testing:
+            if not done:  # game not over
+                if self.rollout.step_count < self.max_eps_length:
+                    self.rollout.add_data(
+                        state        = tensor_state,
+                        p_state      = self.p_state.squeeze(),
+                        v_state      = self.v_state.squeeze(),
+                        action       = action,
+                        value        = value.item(),
+                        reward       = reward * 1.0,  # use the raw reward from step()
+                        done         = 0,
+                        valid_action = torch.from_numpy(list_action),
+                        prob         = log_prob,
+                        policy       = policy
+                    )
+                self.rollout.step_count += 1
+            else:  # game over
+                if self.rollout.step_count < self.max_eps_length:
+                    self.rollout.add_data(
+                        state        = tensor_state,
+                        p_state      = self.p_state.squeeze(),
+                        v_state      = self.v_state.squeeze(),
+                        action       = action,
+                        value        = value.item(),
+                        reward       = reward * 1.0,
+                        done         = 1,
+                        valid_action = torch.from_numpy(list_action),
+                        prob         = log_prob,
+                        policy       = policy
+                    )
 
-        if not done:  # game not over
-            if self.rollout.step_count < self.max_eps_length:
-                self.rollout.add_data(
-                    state        = tensor_state,
-                    p_state      = self.p_state.squeeze(),
-                    v_state      = self.v_state.squeeze(),
-                    action       = action,
-                    value        = value.item(),
-                    reward       = reward * 1.0,  # use the raw reward from step()
-                    done         = 0,
-                    valid_action = torch.from_numpy(list_action),
-                    prob         = log_prob,
-                    policy       = policy
-                )
-            self.rollout.step_count += 1
-        else:  # game over
-            if self.rollout.step_count < self.max_eps_length:
-                self.rollout.add_data(
-                    state        = tensor_state,
-                    p_state      = self.p_state.squeeze(),
-                    v_state      = self.v_state.squeeze(),
-                    action       = action,
-                    value        = value.item(),
-                    reward       = reward * 1.0,
-                    done         = 1,
-                    valid_action = torch.from_numpy(list_action),
-                    prob         = log_prob,
-                    policy       = policy
-                )
+                self.rollout.batch["dones_indices"][self.rollout.game_count] = self.rollout.step_count
+                self.rollout.game_count += 1
+                self.rollout.step_count = 0
 
-            self.rollout.batch["dones_indices"][self.rollout.game_count] = self.rollout.step_count
-            self.rollout.game_count += 1
-            self.rollout.step_count = 0
-
-        self.p_state, self.v_state = p_state, v_state
+            self.p_state, self.v_state = p_state, v_state
 
         if done:
             self.reset_hidden()
         
-        return obs, reward, done, info 
+        return obs, reward, done, info
     
     def run(self, num_games: int) -> float:
         """

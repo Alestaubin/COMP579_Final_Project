@@ -1,4 +1,6 @@
 import torch
+import matplotlib.pyplot as plt
+import os
 
 class RunningMeanStd(object):
     def __init__(self, epsilon=1e-4, shape=()):
@@ -39,4 +41,60 @@ class RunningMeanStd(object):
             return (x - self.mean) / (torch.sqrt(self.var) + 1e-5)
         else:
             return x
-    
+
+class Tester():
+    def __init__(self, env, agent=None):
+        """
+        Overview:
+            Initializes the Tester class.
+
+        Arguments:
+            - env: (`object`): The environment object.
+            - agent: (`object`): The agent object.
+        """
+        self.env            = env
+        self.observation_space_size = env.observation_space.shape[0]
+        self.action_space_size = env.action_space.n
+        
+        self.agent          = agent
+
+    def test(self):
+        """
+        Overview:
+            Runs the test agent.
+        """
+        print("Testing agent...")
+        state = self.env.reset()
+        done = False
+        rewards = []
+        holdings = []
+
+        while not done:
+            state, reward, done, _ = self.agent.play(state, testing=True)
+            rewards.append(reward)
+            holdings.append(state[0])
+        
+        # plotting
+        plot_dir = "plot"
+        os.makedirs(plot_dir, exist_ok=True)
+
+        # Plot rewards
+        plt.figure()
+        plt.plot(rewards)
+        plt.title('Rewards over time')
+        plt.xlabel('Time step')
+        plt.ylabel('Reward')
+        reward_path = os.path.join(plot_dir, f"rewards_{self.data['step']}.png")
+        plt.savefig(reward_path)
+        plt.close()
+
+        # Plot holdings
+        plt.figure()
+        plt.plot(holdings)
+        plt.title('Holdings over time') 
+        plt.xlabel('Time step')
+        plt.ylabel('Holdings')
+        holdings_path = os.path.join(plot_dir, f"holdings_{self.data['step']}.png")
+        plt.savefig(holdings_path)
+        plt.close()
+

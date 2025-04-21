@@ -11,7 +11,7 @@ class Writer:
         Arguments:
             - path: (`str`): The path to save the Tensorboard logs.
         """
-        self.writer = SummaryWriter(log_dir=path)
+        self.writer = SummaryWriter()
 
     def add(self, step, win_rate, reward, entropy, actor_loss, critic_loss, total_loss, kl_mean, kl_max, kl_min):
         """
@@ -30,6 +30,7 @@ class Writer:
             - kl_max: (`float`): The maximum KL divergence.
             - kl_min: (`float`): The minimum KL divergence.
         """
+        
         self.writer.add_scalar("A.Train/Win Rate", win_rate, step)
         self.writer.add_scalar("A.Train/Reward", reward, step)
         self.writer.add_scalar("B.Loss/Entropy", entropy, step)
