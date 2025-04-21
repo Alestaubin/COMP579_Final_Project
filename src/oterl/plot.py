@@ -51,5 +51,6 @@ def plot_trade_episode(trades_csv: str | Path):
   plt.tight_layout()
   plt.show()
 
+
 if __name__ == '__main__':
   plot_tensorboard_runs('./src/runs')

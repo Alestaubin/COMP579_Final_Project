@@ -65,7 +65,7 @@ def compute_episode_metrics(
   pnl = float(-filled_qty * (avg_fill_price - arrival_price))
 
   # Per‑step PnL Sharpe
-  step_pnl = -qty * (px - arrival_price) # per‑trade, treat like returns
+  step_pnl = -qty * (px - arrival_price)  # per‑trade, treat like returns
   sharpe = _series_sharpe(step_pnl)
 
   participation = float(abs(filled_qty) / np.array(lob_volumes).sum())
