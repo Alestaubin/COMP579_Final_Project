@@ -1,0 +1,9 @@
+agents: 
+  - 'RPPO'
+  - 'PPO'
+  - 'DQN'
+timesteps:
+  - 500000
+  - 1000000
+  - 2000000
+seed: 0
