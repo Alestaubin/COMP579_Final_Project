@@ -6,7 +6,7 @@ from oterl.models import Policy, Value
 from oterl.agents.baselines.trainer import train_agent
 from skrl.agents.torch.ppo import PPO
 from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
-
+import numpy as np
 from skrl.envs.wrappers.torch import wrap_env
 import pdb;pdb.set_trace()
 from oterl.agents.recurrent_ppo.trainer import Trainer
@@ -14,6 +14,21 @@ from oterl.agents.recurrent_ppo.trainer import Trainer
 def load_config(config_path):
     with open(config_path, 'r') as f:
         return yaml.safe_load(f)
+
+def test(env):
+    """
+    Overview:
+        Test the environment with a random agent.
+    """
+    print("Testing environment...")
+    state = env.reset()
+    done = False
+    n_actions = env.action_space.n
+    while not done:
+        # Random action
+        action = np.random.randint(0, n_actions)
+        state, reward, done, _ = env.step(action)
+        print(f"State: {state}, Action: {action}, Reward: {reward}, Done: {done}")
 
 def main():
   print('Initializing rmsc04 gym environment...')
@@ -25,10 +40,11 @@ def main():
     background_config='rmsc04',
   )
   seed = cfg.get("seed", 0)
+  #test(env)
 
   for timesteps in cfg["timesteps"]:
       for agent in cfg["agents"]:
-          print(f"Training {agent} with {timesteps} timesteps and seed {cfg.get('seed', 0)}")
+          print(f"Training {agent} with seed {cfg.get('seed', 0)}")
           if agent == "PPO":
             # The SKRL library requires the environment to be wrapped in a specific way
             env = wrap_env(env)
@@ -43,7 +59,6 @@ def main():
             train_agent(DQN, env, cfg=None, timesteps=timesteps, seed=cfg.get("seed", 0))
           elif agent == "RPPO":
             max_eps_length = 1000
-
             config = {
                 "PPO":{
                     "critic_coef": 1,
@@ -52,7 +67,6 @@ def main():
                     "gamma":0.998,
                     "gae_lambda":0.95,
                     "value_clip": 0.2,
-
                 },
                 "LSTM":{
                     "max_eps_length":max_eps_length + 50,

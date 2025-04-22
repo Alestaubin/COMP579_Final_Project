@@ -1,5 +1,6 @@
 import torch
 import os
+import matplotlib.pyplot as plt
 class RunningMeanStd(object):
     def __init__(self, epsilon=1e-4, shape=()):
         self.mean = torch.zeros(shape, 1)
@@ -68,6 +69,7 @@ class Tester():
 
         while not done:
             state, reward, done, _ = self.agent.play(state, testing=True)
+            # print(f"State: {state}, Reward: {reward}, Done: {done}")
             rewards.append(reward)
             holdings.append(state[0])
         
@@ -93,4 +95,14 @@ class Tester():
         plt.ylabel('Holdings')
         holdings_path = os.path.join(plot_dir, f"holdings_{step}.png")
         plt.savefig(holdings_path)
+        plt.close()
+
+        # plot cumulative rewards
+        plt.figure()
+        plt.plot([sum(rewards[:i+1]) for i in range(len(rewards))])
+        plt.title('Cumulative Rewards over time')
+        plt.xlabel('Time step')
+        plt.ylabel('Cumulative Reward')
+        cumulative_rewards_path = os.path.join(plot_dir, f"cumulative_rewards_{step}.png")
+        plt.savefig(cumulative_rewards_path)
         plt.close()

@@ -65,7 +65,6 @@ class Trainer:
         self.entropy_coef_step = (config['entropy_coef']["start"] - config['entropy_coef']['end']) / config['entropy_coef']['step']
         self.tester = Tester(env, self.agent)
 
-
     def _entropy_coef_schedule(self):
         self.entropy_coef -= self.entropy_coef_step
         if self.entropy_coef <= self.config['entropy_coef']['end']:

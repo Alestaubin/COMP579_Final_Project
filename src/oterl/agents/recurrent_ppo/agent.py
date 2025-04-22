@@ -57,19 +57,18 @@ class Agent():
         """
         self.model.eval()
         tensor_state        = self.rms.normalize((torch.tensor(state, dtype=torch.float32)))
-        # print("tensor_state:", tensor_state)
+
         policy, value, p_state, v_state = self.model(tensor_state.reshape(1, -1), self.p_state, self.v_state)
         tensor_state        = tensor_state.view(-1)
         policy              = policy.squeeze()
-        list_action         = np.arange(self.env.action_space.n)
 
-        action_mask         = torch.tensor(list_action, dtype=torch.float32)
+        action_mask = torch.ones(self.action_space_size, dtype=torch.float32)
         action, log_prob    = self.distribution.sample_action(policy, action_mask)
-        
-        if action_mask[action] != 1:
-            action = np.random.choice(np.where(list_action == 1)[0])
-        
+
+        action = int(action) # convert to int, else step won't work
+        # print("action:", action)
         obs, reward, done, info = self.env.step(action)
+        # print("obs:", obs, "reward:", reward, "done:", done)
 
         if not testing:
             if not done:  # game not over
@@ -82,7 +81,7 @@ class Agent():
                         value        = value.item(),
                         reward       = reward * 1.0,  # use the raw reward from step()
                         done         = 0,
-                        valid_action = torch.from_numpy(list_action),
+                        valid_action = torch.ones(self.action_space_size, dtype=torch.float32),
                         prob         = log_prob,
                         policy       = policy
                     )
@@ -97,7 +96,7 @@ class Agent():
                         value        = value.item(),
                         reward       = reward * 1.0,
                         done         = 1,
-                        valid_action = torch.from_numpy(list_action),
+                        valid_action = torch.ones(self.action_space_size, dtype=torch.float32),
                         prob         = log_prob,
                         policy       = policy
                     )
