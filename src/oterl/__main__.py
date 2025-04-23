@@ -5,7 +5,7 @@ import torch
 from skrl.agents.torch.ppo import PPO
 from skrl.agents.torch.dqn import DQN
 from skrl.envs.wrappers.torch import wrap_env
-from oterl.utils.parser import YamlParser
+from oterl.utils.yaml_parser import YamlParser
 from oterl.agents.recurrent_ppo_truncated_bptt.trainer import PPOTrainer
 from oterl.agents.baselines.trainer import train_agent
 
@@ -30,29 +30,30 @@ def main():
 
     seed = cfg.get("seed", 0)
     agent = cfg.get("agent")
+    agent_name = agent["name"]
+    cfg_path = agent["config_path"]
     device = torch.device("cuda" if torch.cuda.is_available() and not cfg.get("cpu", False) else "cpu")
     torch.set_default_tensor_type("torch.FloatTensor" if device.type == "cpu" else "torch.cuda.FloatTensor")
 
     print(f"\nTraining {agent} with seed {seed}")
     # Vanilla PPO Baseline
-    if agent == "PPO":
+    if agent_name == "PPO":
         env = wrap_env(env)
         env.reset()
         env.seed(seed)
         train_agent(PPO, env, cfg=None, timesteps=None, seed=seed)
     # DQN Baseline
-    elif agent == "DQN":
+    elif agent_name == "DQN":
         env = wrap_env(env)
         env.reset()
         env.seed(seed)
         train_agent(DQN, env, cfg=None, timesteps=None, seed=seed)
     
     # Recurrent PPO with Truncated BPTT
-    elif agent == "RPPO":
-        agent_cfg_path = cfg.get("agent_config_path")
-        if not agent_cfg_path:
+    elif agent_name == "RPPO":
+        if not cfg_path:
             raise ValueError("Missing 'agent_config_path' in config for RPPO")
-        agent_cfg = YamlParser(agent_cfg_path).get_config()
+        agent_cfg = YamlParser(cfg_path).get_config()
         trainer = PPOTrainer(agent_cfg, run_id="rppo_run", device=device)
         trainer.run_training()
         trainer.close()

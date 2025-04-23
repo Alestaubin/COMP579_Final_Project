@@ -1,6 +1,6 @@
 agent: 
   name: "RPPO" 
-  config_path: "configs/abides.yaml"
+  config_path: "/Users/jonathancampies/Desktop/Comp579FinalProject/COMP579_Final_Project/src/oterl/agents/recurrent_ppo_truncated_bptt/configs/abides.yaml"
 timesteps:
   - 500000
   - 1000000
