@@ -24,15 +24,23 @@ class AgentTester:
     def __init__(self, model_path, agent_name):
         self.model_path = model_path
         self.agent_name = agent_name.upper()
-        self.env = wrap_env(gym.make('markets-daily_investor-v0', background_config='rmsc04'))
+        self.env = gym.make('markets-execution-v0', 
+                   background_config='rmsc04', 
+                   starting_cash = 10_000_000,
+                   timestep_duration="1S",
+                   order_fixed_size= 20,
+                   execution_window= "00:30:00",
+                   parent_order_size= 20_000,
+                   debug_mode=False)
+
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = torch.device("cpu")
         torch.set_default_tensor_type("torch.FloatTensor")
 
         # TWAP-specific parameters (will leave as the default environment set up)
         self.total_shares = 20000 # number of shares that need to be executed by the agent
-        self.execution_time = 400 # number of time steps available to our agent to execute the entire order
-        self.time_discretization = 10 # TWAP executes trades at every 10 time steps
+        self.execution_window_sec = 1800 # number of time steps available to our agent to execute the entire order
+        self.time_discretization = 30 # TWAP executes trades at every 30 seconds
 
         self.load_agent()
 
@@ -78,7 +86,7 @@ class AgentTester:
         elif self.agent_name == "DQN":
             self.agent = self.load_skrl_agent(DQN, self.model_path, self.env, self.device)
         elif self.agent_name == "TWAP":
-            self.agent = TWAPAgent(self.total_shares, self.execution_time, self.time_discretization)
+            self.agent = TWAPAgent(self.total_shares, self.execution_window_sec, self.time_discretization)
         
         elif self.agent_name == "RPPO":
             # Load model and config
@@ -109,8 +117,8 @@ class AgentTester:
                 action.append(action_branch.sample().item())
             return action
         elif self.agent_name == "TWAP":
-            current_time = state["current_time"] / 1e9 # converting to seconds
-            return self.agent.get_action(current_time)
+            current_time_sec = state["current_time"][-1] / 1e9 # converting ns array to seconds
+            return self.agent.get_action(current_time_sec)
         else:
             return self.agent.act(state, time_step=time_step)[0]
 
