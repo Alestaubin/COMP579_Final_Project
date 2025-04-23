@@ -17,6 +17,8 @@ dependencies = [
   "skrl>=1.4.3",
   "torch==2.2.2",
   "tqdm>=4.67.1",
+  "ruamel.yaml>=0.17.21",
+  "tblib>=1.7.0",
 ]
 
 [build-system]
