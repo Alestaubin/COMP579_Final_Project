@@ -1,7 +1,6 @@
-agents: 
-  - 'RPPO'
-  - 'PPO'
-  - 'DQN'
+agent: 
+  name: "RPPO" 
+  config_path: "configs/abides.yaml"
 timesteps:
   - 500000
   - 1000000
