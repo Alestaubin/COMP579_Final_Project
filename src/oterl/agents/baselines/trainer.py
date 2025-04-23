@@ -10,6 +10,8 @@ from skrl.utils.model_instantiators.torch import deterministic_model
 
 from oterl.models import Policy, Value
 from oterl.utils.cfg_utils import get_ppo_cartpole_cfg
+from oterl.agents.baselines.cfg_utils import get_ppo_cartpole_cfg
+from oterl.agents.baselines.skrl_models import Policy, Value
 
 
 def train_agent(agent_class, env, cfg=None, timesteps=500_000, seed=0, device='cpu'):
