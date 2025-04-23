@@ -26,7 +26,15 @@ def main():
     cfg = load_config(args.config)
 
     print('Initializing rmsc04 gym environment...')
-    env = gym.make('markets-daily_investor-v0', background_config='rmsc04')
+    env = gym.make('markets-execution-v0', 
+                   background_config='rmsc04', 
+                   starting_cash = 10_000_000,
+                   timestep_duration="1S",
+                   order_fixed_size= 20,
+                   execution_window= "00:30:00",
+                   parent_order_size= 20_000,
+                   debug_mode=False,
+    )
 
     seed = cfg.get("seed", 0)
     agent = cfg.get("agent")
