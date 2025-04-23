@@ -12,6 +12,7 @@ from oterl.agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
 from skrl.agents.torch.ppo import PPO
+from oterl.agents.TWAP import TWAPAgent
 from skrl.utils.model_instantiators.torch import deterministic_model
 from oterl.agents.baselines.skrl_models import Policy, Value
 from oterl.agents.baselines.cfg_utils import get_ppo_cartpole_cfg
@@ -27,6 +28,12 @@ class AgentTester:
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.device = torch.device("cpu")
         torch.set_default_tensor_type("torch.FloatTensor")
+
+        # TWAP-specific parameters (will leave as the default environment set up)
+        self.total_shares = 20000 # number of shares that need to be executed by the agent
+        self.execution_time = 400 # number of time steps available to our agent to execute the entire order
+        self.time_discretization = 10 # TWAP executes trades at every 10 time steps
+
         self.load_agent()
 
     def load_skrl_agent(self, agent_class, checkpoint_path, env, device="cpu"):
@@ -70,6 +77,9 @@ class AgentTester:
             self.agent = self.load_skrl_agent(PPO, self.model_path, self.env, self.device)
         elif self.agent_name == "DQN":
             self.agent = self.load_skrl_agent(DQN, self.model_path, self.env, self.device)
+        elif self.agent_name == "TWAP":
+            self.agent = TWAPAgent(self.total_shares, self.execution_time, self.time_discretization)
+        
         elif self.agent_name == "RPPO":
             # Load model and config
             state_dict, self.config = pickle.load(open(self.model_path, "rb"))
@@ -98,6 +108,9 @@ class AgentTester:
             for action_branch in policy:
                 action.append(action_branch.sample().item())
             return action
+        elif self.agent_name == "TWAP":
+            current_time = state["current_time"] / 1e9 # converting to seconds
+            return self.agent.get_action(current_time)
         else:
             return self.agent.act(state, time_step=time_step)[0]
 
@@ -126,6 +139,7 @@ class AgentTester:
 
     def test(self):
         data_dict = self.run_episode()
+        print(data_dict)
         self.evaluate_metrics(data_dict)
 
 
