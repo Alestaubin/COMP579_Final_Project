@@ -36,7 +36,7 @@ class TWAPAgent:
             self.current_slice = slice_num
 
             # Calculate shares to execute
-            if self.current_slice == self.num_slices - 1:
+            if self.current_slice == self.time_slices - 1:
                 # Last slice, so we execute the remaining shares
                 return self.shares_per_slice + self.remaining_shares
             

@@ -87,7 +87,10 @@ class AgentTester:
             return action
         elif self.agent_name == "TWAP":
             current_time_sec = state["current_time"][-1] / 1e9 # converting ns array to seconds
-            return self.agent.get_action(current_time_sec)
+            action = self.agent.get_action(current_time_sec)
+
+            # convert to env action format (0 = market buy, 1 = limit, 2 = hold)
+            return 0 if action > 0 else 2 # TWAP does market orders when executing, and holds once its done
         else:
             return self.agent.act(state, timestep=time_step, timesteps=max_steps)[0]
 
