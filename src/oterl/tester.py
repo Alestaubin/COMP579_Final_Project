@@ -3,24 +3,22 @@ import torch
 import gym
 import numpy as np
 import pickle
-from agents.recurrent_ppo_truncated_bptt.utils import create_env
 from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
-from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
+from skrl.agents.torch.dqn import DQN
 from skrl.agents.torch.ppo import PPO
 from agents.TWAP import TWAPAgent
-from skrl.utils.model_instantiators.torch import deterministic_model
-from agents.baselines.skrl_models import Policy, Value
-from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
 from agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGym
 from agents.baselines.trainer import load_skrl_agent
 from skrl.envs.wrappers.torch import GymWrapper
 from agents.recurrent_ppo.trainer import Trainer
 from oterl.agents.recurrent_ppo.config_utils import get_config
+import matplotlib.pyplot as plt
 
 # Example usage:
 # uv run tester.py --model_path "src/models/2025-04-23-21-25-41_20.nn" --agent "RPPO"
 # uv run tester.py --model_path "../runs/torch/CartPole/25-04-23_18-12-48-540371_PPO/checkpoints/best_agent.pt" --agent "PPO"
+
 
 class AgentTester:
     def __init__(self, model_path, agent_name):
@@ -45,13 +43,15 @@ class AgentTester:
                    debug_mode=True)
 
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.device = torch.device("cpu")
-        torch.set_default_tensor_type("torch.FloatTensor")
+        self.device = torch.device('cpu')
+        torch.set_default_tensor_type('torch.FloatTensor')
 
         # TWAP-specific parameters (will leave as the default environment set up)
-        self.total_shares = 20000 # number of shares that need to be executed by the agent
-        self.execution_window_sec = 1800 # number of time steps available to our agent to execute the entire order
-        self.time_discretization = 30 # TWAP executes trades at every 30 seconds
+        self.total_shares = 20000  # number of shares that need to be executed by the agent
+        self.execution_window_sec = (
+        1800  # number of time steps available to our agent to execute the entire order
+        )
+        self.time_discretization = 30  # TWAP executes trades at every 30 seconds
 
         self.load_agent()
 
@@ -89,35 +89,25 @@ class AgentTester:
         elif self.agent_name == "RPPO2":              
             trainer = Trainer(config=get_config(), env=self.env, writer_path=None,save_path=self.model_path)
             self.agent = trainer.agent
-        else:
-            raise ValueError(f"Unsupported agent: {self.agent_name}")
-    
+
     def act(self, state, time_step=None, max_steps=None):
-        if self.agent_name == "RPPO":
+        if self.agent_name == 'RPPO':
             # Forward model
-            policy, value, self.recurrent_cell = self.model(torch.tensor(np.expand_dims(state, 0)), self.recurrent_cell, self.device, 1)
+            policy, value, self.recurrent_cell = self.model(
+                torch.tensor(np.expand_dims(state, 0)), self.recurrent_cell, self.device, 1
+            )
             # Sample action
             action = []
             for action_branch in policy:
                 action.append(action_branch.sample().item())
             return action
-        elif self.agent_name == "TWAP":
-            current_time_sec = state["current_time"][-1] / 1e9 # converting ns array to seconds
+        elif self.agent_name == 'TWAP':
+            current_time_sec = state['current_time'][-1] / 1e9  # converting ns array to seconds
             return self.agent.get_action(current_time_sec)
         else:
             return self.agent.act(state, timestep=time_step, timesteps=max_steps)[0]
 
     def run_episode(self):
-        print(self.env)
-        if isinstance(self.env, GymWrapper):
-            state, _ = self.env.reset()
-        else:
-            state = self.env.reset()
-        print("Initial state:", state)
-        done = False
-        self.states = []
-        self.infos = []
-
         max_steps = 10000
         t = 0
         while not done and t < max_steps:
@@ -139,7 +129,6 @@ class AgentTester:
         
         print("Episode finished after {} timesteps".format(t))
     
-    #@TODO: Implement metric evaluation
     def evaluate_metrics(self, actions):
         """
         Evaluates trading performance metrics based on a list of action dictionaries.
@@ -291,10 +280,111 @@ class AgentTester:
         
         return metrics
 
-    def test(self):
-        self.run_episode()
-        self.evaluate_metrics()
+    def plot_trading_performance(self, save_path=None):
+        """
+        Visualizes trading performance metrics from self.infos
+        Args:
+            save_path (str): Optional path to save the figure
+        """
+        if not hasattr(self, 'infos') or not self.infos:
+            raise ValueError("No trading data available. Run an episode first.")
+        
+        # Convert timestamps from ns to datetime objects
+        start_time = datetime.now()
+        timestamps = [start_time + timedelta(seconds=info['current_time']/1e9) 
+                    for info in self.infos]
+        
+        # Extract data series
+        holdings = [info['holdings'] for info in self.infos]
+        best_bids = [info['best_bid'] for info in self.infos]
+        best_asks = [info['best_ask'] for info in self.infos]
+        last_trans = [info['last_transaction'] for info in self.infos]
+        pnls = [info['pnl'] for info in self.infos]
+        rewards = [info['reward'] for info in self.infos]
+        
+        # Calculate derived metrics
+        mid_prices = [(b+a)/2 for b,a in zip(best_bids, best_asks)]
+        spreads = [a-b for b,a in zip(best_bids, best_asks)]
+        
+        # Create figure with subplots
+        fig, axes = plt.subplots(5, 1, figsize=(14, 16), sharex=True)
+        
+        # Plot 1: Holdings Progress
+        axes[0].plot(timestamps, holdings, 'b-', linewidth=2, label='Current Holdings')
+        axes[0].axhline(y=self.parent_order_size, color='r', linestyle='--', 
+                    label='Target Holdings')
+        axes[0].set_ylabel('Shares')
+        axes[0].set_title(f'{self.agent_name} - Holdings Progress (Final: {holdings[-1]}/{self.parent_order_size})')
+        axes[0].legend()
+        axes[0].grid(True)
+        
+        # Plot 2: Price Movement and Execution
+        axes[1].plot(timestamps, mid_prices, 'g-', label='Mid Price')
+        axes[1].plot(timestamps, best_bids, 'b--', label='Best Bid')
+        axes[1].plot(timestamps, best_asks, 'r--', label='Best Ask')
+        axes[1].plot(timestamps, last_trans, 'k:', label='Last Trade')
+        axes[1].set_ylabel('Price')
+        axes[1].set_title('Market Prices and Execution')
+        axes[1].legend()
+        axes[1].grid(True)
+        
+        # Plot 3: Spread Analysis
+        axes[2].plot(timestamps, spreads, 'm-', label='Spread')
+        axes[2].axhline(y=np.mean(spreads), color='k', linestyle='--', 
+                    label=f'Avg Spread: {np.mean(spreads):.2f}')
+        axes[2].set_ylabel('Spread')
+        axes[2].set_title('Bid-Ask Spread')
+        axes[2].legend()
+        axes[2].grid(True)
+        
+        # Plot 4: PnL and Reward
+        axes[3].plot(timestamps, pnls, 'c-', label='Cumulative PnL')
+        axes[3].plot(timestamps, rewards, 'y-', label='Step Reward')
+        axes[3].set_ylabel('Value')
+        axes[3].set_title(f'Final PnL: {pnls[-1]:.2f} | Avg Reward: {np.mean(rewards):.4f}')
+        axes[3].legend()
+        axes[3].grid(True)
+        
+        # Plot 5: Execution Rate
+        if len(timestamps) > 1:
+            time_elapsed = [(ts - timestamps[0]).total_seconds() for ts in timestamps]
+            completion_pct = [abs(h)/self.parent_order_size*100 for h in holdings]
+            axes[4].plot(timestamps, completion_pct, 'purple', label='Completion %')
+            axes[4].plot(timestamps, [t/max(time_elapsed)*100 for t in time_elapsed], 
+                        'gray', linestyle='--', label='Time Progress')
+            axes[4].set_ylabel('Percentage')
+            axes[4].set_title('Execution Progress vs Time')
+            axes[4].legend()
+            axes[4].grid(True)
+        
+        # Format x-axis
+        axes[-1].xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+        fig.autofmt_xdate()
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Saved performance plot to {save_path}")
+        else:
+            plt.show() 
 
+
+    def test(self):
+        # self.run_episode()
+        # self.evaluate_metrics()
+
+        # evaluating metrics of the agent and printing plots
+        self.run_episode()
+        metrics = self.evaluate_metrics(self.infos)
+        self.plot_trading_performance()
+        
+        # Print key metrics
+        print("\n=== Execution Summary ===")
+        print(f"Completion: {metrics.get('execution_percentage', 0):.1f}%")
+        print(f"Total PnL: {metrics.get('total_pnl', 0):.2f}")
+        print(f"VWAP Slippage: {metrics.get('vwap_slippage', 0):.4f}%")
+        print(f"Avg Spread: {metrics.get('avg_spread', 0):.2f}")
+        print(f"Execution Duration: {metrics.get('execution_duration', 0)/1e9:.1f}s")
 
 def main():
     parser = argparse.ArgumentParser()
@@ -306,5 +396,5 @@ def main():
     tester.test()
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+  main()
