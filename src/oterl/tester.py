@@ -7,15 +7,15 @@ from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.ppo import PPO as SKRL_PPO
 from skrl.agents.torch.dqn import DQN as SKRL_DQN
 import pickle
-from oterl.agents.recurrent_ppo_truncated_bptt.utils import create_env
-from oterl.agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
+from agents.recurrent_ppo_truncated_bptt.utils import create_env
+from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
 from skrl.agents.torch.ppo import PPO
-from oterl.agents.TWAP import TWAPAgent
+from agents.TWAP import TWAPAgent
 from skrl.utils.model_instantiators.torch import deterministic_model
-from oterl.agents.baselines.skrl_models import Policy, Value
-from oterl.agents.baselines.cfg_utils import get_ppo_cartpole_cfg
+from agents.baselines.skrl_models import Policy, Value
+from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
 
 # Example usage:
 # uv run tester.py --model_path "../models/my_run.nn" --agent "RPPO"
@@ -123,18 +123,48 @@ class AgentTester:
             return self.agent.act(state, time_step=time_step)[0]
 
     def run_episode(self):
+        # state = self.env.reset()
+        # done = False
+        # data = {"states": [], "rewards": []}
+        # reward = 0
+        # while not done:
+        #     action = self.act(state)
+        #     print(f"State: {state}, Action: {action}, reward: {reward}")
+        #     state, reward, done, _ = self.env.step(action)
+        #     data["states"].append(state)
+        #     data["rewards"].append(reward)
+
+        # return data
         state = self.env.reset()
         done = False
-        data = {"states": [], "rewards": []}
-        reward = 0
-        while not done:
-            action = self.act(state)
-            print(f"State: {state}, Action: {action}, reward: {reward}")
-            state, reward, done, _ = self.env.step(action)
-            data["states"].append(state)
-            data["rewards"].append(reward)
+        self.executed_shares = 0
+        metrics = {
+            "execution_prices": [],
+            "timestamps": [],
+            "actions": [],
+            "entry_price": state['entry_price']
+        }
 
-        return data
+        while not done and self.executed_shares < self.parent_order_size:
+            action = self.act(state)
+            next_state, reward, done, info = self.env.step(action)
+            
+            # Track executions
+            if action > 0:
+                filled = info.get("executed_quantity", 0)
+                self.executed_shares += filled
+                metrics["execution_prices"].append(info.get("execution_price"))
+                metrics["timestamps"].append(state['current_time'][-1])
+                metrics["actions"].append(action)
+            
+            state = next_state
+
+        metrics.update({
+            "completion_ratio": self.executed_shares / self.parent_order_size,
+            "slippage": np.mean(metrics["execution_prices"]) - metrics["entry_price"]
+        })
+        return metrics
+
     
     #@TODO: Implement metric evaluation
     def evaluate_metrics(self, data_dict):
