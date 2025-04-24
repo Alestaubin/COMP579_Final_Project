@@ -18,6 +18,7 @@ from skrl.envs.wrappers.torch import GymWrapper
 
 # Example usage:
 # uv run tester.py --model_path "src/models/2025-04-23-21-25-41_20.nn" --agent "RPPO"
+# uv run tester.py --model_path "../runs/torch/CartPole/25-04-23_18-12-48-540371_PPO/checkpoints/best_agent.pt" --agent "PPO"
 
 class AgentTester:
     def __init__(self, model_path, agent_name):
@@ -89,7 +90,10 @@ class AgentTester:
 
     def run_episode(self):
         print(self.env)
-        state, _ = self.env.reset()
+        if isinstance(self.env, GymWrapper):
+            state, _ = self.env.reset()
+        else:
+            state = self.env.reset()
         print("Initial state:", state)
         done = False
         self.states = []
