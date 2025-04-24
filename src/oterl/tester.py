@@ -114,42 +114,18 @@ class AgentTester:
             self.infos.append(info)
             self.states.append(state)
     
-    #@TODO: Implement metric evaluation
-    def evaluate_metrics(self, actions):
-        """
-        Evaluates trading performance metrics based on a list of action dictionaries.
-        
-        Args:
-            actions (list): List of dictionaries, each containing:
-                - "last_transaction": Price of the last transaction
-                - "best_bid": Current best bid price
-                - "best_ask": Current best ask price
-                - "current_time": Current timestamp
-                - "holdings": Current inventory position
-                - "parent_size": Total size of the parent order
-                - "pnl": Current profit and loss
-                - "reward": PnL normalized by parent order size
-                
-        Returns:
-            dict: Dictionary containing calculated performance metrics
-        """
-        import numpy as np
-        
-        if not actions:
-            print("No actions provided for evaluation")
-            return {}
-        
+    def evaluate_metrics(self):
         # Extract data series from the action dictionaries
-        last_transactions = np.array([action.get("last_transaction", 0) for action in actions])
-        best_bids = np.array([action.get("best_bid", 0) for action in actions])
-        best_asks = np.array([action.get("best_ask", 0) for action in actions])
-        timestamps = np.array([action.get("current_time", 0) for action in actions])
-        holdings = np.array([action.get("holdings", 0) for action in actions])
-        pnls = np.array([action.get("pnl", 0) for action in actions])
-        rewards = np.array([action.get("reward", 0) for action in actions])
+        last_transactions = np.array([action.get("last_transaction", 0) for action in self.infos])
+        best_bids = np.array([action.get("best_bid", 0) for action in self.infos])
+        best_asks = np.array([action.get("best_ask", 0) for action in self.infos])
+        timestamps = np.array([action.get("current_time", 0) for action in self.infos])
+        holdings = np.array([action.get("holdings", 0) for action in self.infos])
+        pnls = np.array([action.get("pnl", 0) for action in self.infos])
+        rewards = np.array([action.get("reward", 0) for action in self.infos])
         
         # Get the parent order size
-        parent_size = actions[0].get("parent_size", 1)
+        parent_size = self.infos[0].get("parent_size", 1)
         
         # Calculate mid prices and spreads
         mid_prices = (best_asks + best_bids) / 2
