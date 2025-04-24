@@ -121,9 +121,6 @@ class PPOTrainer:
             del(self.buffer.samples_flat)
             if self.device.type == "cuda":
                 torch.cuda.empty_cache()
-            
-            if update % 10 == 0:
-                self._save_model(update_num=update)
 
         # Save the trained model at the end of the training
         self._save_model()
@@ -321,14 +318,13 @@ class PPOTrainer:
                 result[key + "_std"] = np.std([info[key] for info in episode_info])
         return result
 
-    def _save_model(self, update_num) -> None:
+    def _save_model(self) -> None:
         """Saves the model and the used training config to the models directory. The filename is based on the run id."""
         if not os.path.exists("./models"):
             os.makedirs("./models")
         self.model.cpu()
-        filename = "./models/" + str(self.run_id) + "_" + str(update_num)+ ".nn"
-        pickle.dump((self.model.state_dict(), self.config), open(filename, "wb"))
-        print("Model saved to " + filename)
+        pickle.dump((self.model.state_dict(), self.config), open("./models/" + self.run_id + ".nn", "wb"))
+        print("Model saved to " + "./models/" + self.run_id + ".nn")
 
     def close(self) -> None:
         """Terminates the trainer and all related processes."""

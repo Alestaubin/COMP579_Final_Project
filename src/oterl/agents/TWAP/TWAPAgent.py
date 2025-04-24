@@ -2,7 +2,7 @@
 import numpy as np
 
 class TWAPAgent:
-    def __init__(self, total_shares, total_time, time_discretization):
+    def __init__(self, total_shares, execution_window_sec, time_discretization_sec):
         """
         Initialize TWAP Agent
 
@@ -12,36 +12,25 @@ class TWAPAgent:
             time_discretization (int): Time interval between orders (number of time steps) 
         """
         self.total_shares = total_shares
-        self.total_time = total_time
-        self.time_discretization = time_discretization
-
-        # Calculate the number of slices of shares what will be traded
-        self.num_slices = int(total_time / time_discretization)
-
-        # Calculate the number of shares per slice, with the remainder of the shares being placed in the last slice
-        self.shares_per_slice = total_shares // self.num_slices
-        self.remaining_shares = total_shares % self.num_slices
-
-        # fields to track the execution of the shares
+        self.time_slices = int(execution_window_sec / time_discretization_sec)
+        self.shares_per_slice = total_shares // self.time_slices
+        self.remaining_shares = total_shares % self.time_slices
         self.current_slice = 0
-        self.executed_shares = 0
+        self.time_discretization = time_discretization_sec
 
 
-    def get_action(self, current_time):
+    def get_action(self, current_time_sec):
         """
         Get TWAP action for current time step
 
         Args:
-            current_time (float): Current time in the simulation
+            current_time_sec (float): Current time in the simulation in seconds
 
         Returns:
             int: Number of shares to execute in this time slice
         """
 
-        if current_time >= self.total_time:
-            return 0
-
-        slice_num = int(current_time / self.time_discretization)
+        slice_num = int(current_time_sec / self.time_discretization)
 
         if slice_num > self.current_slice:
             self.current_slice = slice_num
@@ -50,11 +39,10 @@ class TWAPAgent:
             if self.current_slice == self.num_slices - 1:
                 # Last slice, so we execute the remaining shares
                 return self.shares_per_slice + self.remaining_shares
-            else:
-                return self.shares_per_slice
+            
+            return self.shares_per_slice
 
-        else:
-            return 0
+        return 0 # no action needed this second
 
 
     def reset(self):

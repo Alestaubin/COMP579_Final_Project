@@ -1,8 +1,6 @@
 agent: 
-  name: "RPPO" 
-  config_path: "/Users/alexst-aubin/Library/CloudStorage/GoogleDrive-alex.staubin2@gmail.com/My Drive/McGill/McGill_Winter25/COMP579/FinalProject/code/src/oterl/configs/abides.yaml"
-timesteps:
-  - 500000
-  - 1000000
-  - 2000000
+  name: "PPO" 
+  config_path: "agents/recurrent_ppo_truncated_bptt/configs/abides.yaml"
+timesteps: 500000 # Only used for skrl agents
 seed: 0
+device: "mps" # "cuda" or "cpu"
