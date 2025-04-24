@@ -13,6 +13,38 @@ from skrl.utils.model_instantiators.torch import deterministic_model
 from oterl.agents.baselines.cfg_utils import get_ppo_cartpole_cfg
 from oterl.agents.baselines.skrl_models import Policy, Value
 
+def load_skrl_agent(agent_class, checkpoint_path, env, device="cpu"):
+        models = {}
+        if agent_class == PPO:
+            models["policy"] = Policy(env.observation_space, env.action_space, device, clip_actions=True)
+            models["value"] = Value(env.observation_space, env.action_space, device)
+            cfg = get_ppo_cartpole_cfg(env, device)
+        elif agent_class == DQN:
+            models["q_network"] = deterministic_model(observation_space=env.observation_space,
+                                                    action_space=env.action_space,
+                                                    device=device,
+                                                    clip_actions=False,
+                                                    network=[{
+                                                        "name": "net",
+                                                        "input": "STATES",
+                                                        "layers": [64, 64],
+                                                        "activations": "relu",
+                                                    }],
+                                                    output="ACTIONS")
+            cfg = DQN_DEFAULT_CONFIG.copy()
+            #cfg["exploration"] = {"noise": False}  # disable exploration for evaluation
+        else:
+            raise ValueError("Unsupported agent class")
+
+        agent = agent_class(models=models,
+                            memory=None,
+                            cfg=cfg,
+                            observation_space=env.observation_space,
+                            action_space=env.action_space,
+                            device=device)
+
+        agent.load(checkpoint_path)
+        return agent
 
 def train_agent(agent_class, env, cfg=None, timesteps=500_000, seed=0, device='cpu'):
   # Set random seed for reproducibility
