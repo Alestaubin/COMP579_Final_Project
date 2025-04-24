@@ -1,8 +1,6 @@
 agent: 
-  name: "RPPO" 
-  config_path: "/Users/jonathancampies/Desktop/Comp579FinalProject/COMP579_Final_Project/src/oterl/agents/recurrent_ppo_truncated_bptt/configs/abides.yaml"
-timesteps:
-  - 500000
-  - 1000000
-  - 2000000
+  name: "PPO" 
+  config_path: "agents/recurrent_ppo_truncated_bptt/configs/abides.yaml"
+timesteps: 500000 # Only used for skrl agents
 seed: 0
+device: "mps" # "cuda" or "cpu"
