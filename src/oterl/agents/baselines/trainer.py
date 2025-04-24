@@ -10,8 +10,8 @@ from skrl.utils.model_instantiators.torch import deterministic_model
 
 # from oterl.models import Policy, Value
 # from oterl.utils.cfg_utils import get_ppo_cartpole_cfg
-from oterl.agents.baselines.cfg_utils import get_ppo_cartpole_cfg
-from oterl.agents.baselines.skrl_models import Policy, Value
+from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
+from agents.baselines.skrl_models import Policy, Value
 
 def load_skrl_agent(agent_class, checkpoint_path, env, device="cpu"):
         models = {}

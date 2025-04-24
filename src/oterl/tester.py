@@ -11,7 +11,7 @@ from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
 from skrl.agents.torch.ppo import PPO
-from agents.TWAP import TWAPAgent
+from agents.TWAP.TWAPAgent import TWAPAgent
 from skrl.utils.model_instantiators.torch import deterministic_model
 from agents.baselines.skrl_models import Policy, Value
 from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
@@ -44,6 +44,8 @@ class AgentTester:
         self.total_shares = 20000 # number of shares that need to be executed by the agent
         self.execution_window_sec = 1800 # number of time steps available to our agent to execute the entire order
         self.time_discretization = 30 # TWAP executes trades at every 30 seconds
+        self.actual_order_size = 20 # this will be used by TWAP since it does not use the fixed_order_size
+        self.parent_order_size = 20000
 
         self.load_agent()
 
@@ -86,11 +88,15 @@ class AgentTester:
                 action.append(action_branch.sample().item())
             return action
         elif self.agent_name == "TWAP":
-            current_time_sec = state["current_time"][-1] / 1e9 # converting ns array to seconds
-            action = self.agent.get_action(current_time_sec)
-
-            # convert to env action format (0 = market buy, 1 = limit, 2 = hold)
-            return 0 if action > 0 else 2 # TWAP does market orders when executing, and holds once its done
+            # print("state: ", state) # debugging
+            time_pct = state[1]
+            shares_to_execute = self.agent.get_action(time_pct)
+            
+            if shares_to_execute > 0:
+                # For TWAP: Modify the environment's order size dynamically
+                self.env.unwrapped.order_fixed_size = shares_to_execute
+                return 0  # Market buy
+            return 2  # Hold
         else:
             return self.agent.act(state, timestep=time_step, timesteps=max_steps)[0]
 
@@ -382,7 +388,7 @@ class AgentTester:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, required=True, help="Path to the trained agent model")
-    parser.add_argument('--agent', type=str, required=True, choices=["PPO", "DQN", "RPPO"], help="Agent type")
+    parser.add_argument('--agent', type=str, required=True, choices=["PPO", "DQN", "RPPO", "TWAP"], help="Agent type")
     args = parser.parse_args()
 
     tester = AgentTester(model_path=args.model_path, agent_name=args.agent)

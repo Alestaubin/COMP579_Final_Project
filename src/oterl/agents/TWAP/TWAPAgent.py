@@ -12,37 +12,31 @@ class TWAPAgent:
             time_discretization (int): Time interval between orders (number of time steps) 
         """
         self.total_shares = total_shares
-        self.time_slices = int(execution_window_sec / time_discretization_sec)
-        self.shares_per_slice = total_shares // self.time_slices
+        self.time_slices = execution_window_sec // time_discretization_sec
+        self.base_slice_shares = total_shares // self.time_slices
         self.remaining_shares = total_shares % self.time_slices
-        self.current_slice = 0
-        self.time_discretization = time_discretization_sec
+        self.slice_duration_pct = time_discretization_sec / execution_window_sec
+        self.current_slice = -1
 
 
-    def get_action(self, current_time_sec):
+    def get_action(self, time_pct):
         """
         Get TWAP action for current time step
 
         Args:
-            current_time_sec (float): Current time in the simulation in seconds
+            time_pct (float): percent of the total execution window we are at
 
         Returns:
             int: Number of shares to execute in this time slice
         """
 
-        slice_num = int(current_time_sec / self.time_discretization)
-
-        if slice_num > self.current_slice:
-            self.current_slice = slice_num
-
-            # Calculate shares to execute
+        target_slice = int(time_pct / self.slice_duration_pct)
+        if target_slice > self.current_slice:
+            self.current_slice = target_slice
             if self.current_slice == self.time_slices - 1:
-                # Last slice, so we execute the remaining shares
-                return self.shares_per_slice + self.remaining_shares
-            
-            return self.shares_per_slice
-
-        return 0 # no action needed this second
+                return self.base_slice_shares + self.remaining_shares
+            return self.base_slice_shares
+        return 0
 
 
     def reset(self):
