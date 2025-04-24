@@ -3,6 +3,9 @@ import torch
 import gym
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from datetime import datetime, timedelta
 from agents.recurrent_ppo_truncated_bptt.utils import create_env
 from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
@@ -266,9 +269,111 @@ class AgentTester:
         
         return metrics
 
+    def plot_trading_performance(self, save_path=None):
+        """
+        Visualizes trading performance metrics from self.infos
+        Args:
+            save_path (str): Optional path to save the figure
+        """
+        if not hasattr(self, 'infos') or not self.infos:
+            raise ValueError("No trading data available. Run an episode first.")
+        
+        # Convert timestamps from ns to datetime objects
+        start_time = datetime.now()
+        timestamps = [start_time + timedelta(seconds=info['current_time']/1e9) 
+                    for info in self.infos]
+        
+        # Extract data series
+        holdings = [info['holdings'] for info in self.infos]
+        best_bids = [info['best_bid'] for info in self.infos]
+        best_asks = [info['best_ask'] for info in self.infos]
+        last_trans = [info['last_transaction'] for info in self.infos]
+        pnls = [info['pnl'] for info in self.infos]
+        rewards = [info['reward'] for info in self.infos]
+        
+        # Calculate derived metrics
+        mid_prices = [(b+a)/2 for b,a in zip(best_bids, best_asks)]
+        spreads = [a-b for b,a in zip(best_bids, best_asks)]
+        
+        # Create figure with subplots
+        fig, axes = plt.subplots(5, 1, figsize=(14, 16), sharex=True)
+        
+        # Plot 1: Holdings Progress
+        axes[0].plot(timestamps, holdings, 'b-', linewidth=2, label='Current Holdings')
+        axes[0].axhline(y=self.parent_order_size, color='r', linestyle='--', 
+                    label='Target Holdings')
+        axes[0].set_ylabel('Shares')
+        axes[0].set_title(f'{self.agent_name} - Holdings Progress (Final: {holdings[-1]}/{self.parent_order_size})')
+        axes[0].legend()
+        axes[0].grid(True)
+        
+        # Plot 2: Price Movement and Execution
+        axes[1].plot(timestamps, mid_prices, 'g-', label='Mid Price')
+        axes[1].plot(timestamps, best_bids, 'b--', label='Best Bid')
+        axes[1].plot(timestamps, best_asks, 'r--', label='Best Ask')
+        axes[1].plot(timestamps, last_trans, 'k:', label='Last Trade')
+        axes[1].set_ylabel('Price')
+        axes[1].set_title('Market Prices and Execution')
+        axes[1].legend()
+        axes[1].grid(True)
+        
+        # Plot 3: Spread Analysis
+        axes[2].plot(timestamps, spreads, 'm-', label='Spread')
+        axes[2].axhline(y=np.mean(spreads), color='k', linestyle='--', 
+                    label=f'Avg Spread: {np.mean(spreads):.2f}')
+        axes[2].set_ylabel('Spread')
+        axes[2].set_title('Bid-Ask Spread')
+        axes[2].legend()
+        axes[2].grid(True)
+        
+        # Plot 4: PnL and Reward
+        axes[3].plot(timestamps, pnls, 'c-', label='Cumulative PnL')
+        axes[3].plot(timestamps, rewards, 'y-', label='Step Reward')
+        axes[3].set_ylabel('Value')
+        axes[3].set_title(f'Final PnL: {pnls[-1]:.2f} | Avg Reward: {np.mean(rewards):.4f}')
+        axes[3].legend()
+        axes[3].grid(True)
+        
+        # Plot 5: Execution Rate
+        if len(timestamps) > 1:
+            time_elapsed = [(ts - timestamps[0]).total_seconds() for ts in timestamps]
+            completion_pct = [abs(h)/self.parent_order_size*100 for h in holdings]
+            axes[4].plot(timestamps, completion_pct, 'purple', label='Completion %')
+            axes[4].plot(timestamps, [t/max(time_elapsed)*100 for t in time_elapsed], 
+                        'gray', linestyle='--', label='Time Progress')
+            axes[4].set_ylabel('Percentage')
+            axes[4].set_title('Execution Progress vs Time')
+            axes[4].legend()
+            axes[4].grid(True)
+        
+        # Format x-axis
+        axes[-1].xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+        fig.autofmt_xdate()
+        plt.tight_layout()
+        
+        if save_path:
+            plt.savefig(save_path, dpi=300, bbox_inches='tight')
+            print(f"Saved performance plot to {save_path}")
+        else:
+            plt.show() 
+
+
     def test(self):
+        # self.run_episode()
+        # self.evaluate_metrics()
+
+        # evaluating metrics of the agent and printing plots
         self.run_episode()
-        self.evaluate_metrics()
+        metrics = self.evaluate_metrics(self.infos)
+        self.plot_trading_performance()
+        
+        # Print key metrics
+        print("\n=== Execution Summary ===")
+        print(f"Completion: {metrics.get('execution_percentage', 0):.1f}%")
+        print(f"Total PnL: {metrics.get('total_pnl', 0):.2f}")
+        print(f"VWAP Slippage: {metrics.get('vwap_slippage', 0):.4f}%")
+        print(f"Avg Spread: {metrics.get('avg_spread', 0):.2f}")
+        print(f"Execution Duration: {metrics.get('execution_duration', 0)/1e9:.1f}s")
 
 
 def main():
