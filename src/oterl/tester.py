@@ -136,6 +136,7 @@ class AgentTester:
 
         # return data
         state = self.env.reset()
+        print(state) # debugging
         done = False
         self.executed_shares = 0
         metrics = {
