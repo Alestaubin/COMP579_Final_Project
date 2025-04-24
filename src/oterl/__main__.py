@@ -9,6 +9,8 @@ from oterl.utils.yaml_parser import YamlParser
 from oterl.agents.recurrent_ppo_truncated_bptt.trainer import PPOTrainer
 from oterl.agents.baselines.trainer import train_agent
 import time
+from oterl.agents.recurrent_ppo.trainer import Trainer
+from oterl.agents.recurrent_ppo.config_utils import get_config
 
 
 def load_config(config_path):
@@ -18,7 +20,7 @@ def load_config(config_path):
 
 
 def main():
-    import pdb;pdb.set_trace()
+    #import pdb;pdb.set_trace()
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, required=True, help="Path to config YAML file")
     args = parser.parse_args()
@@ -29,10 +31,10 @@ def main():
     env = gym.make('markets-execution-v0', 
                    background_config='rmsc04', 
                    starting_cash = 10_000_000,
-                   timestep_duration="1S",
+                   timestep_duration="5S",
                    order_fixed_size= 20,
                    execution_window= "00:30:00",
-                   parent_order_size= 20_000,
+                   parent_order_size= 10_000,
                    debug_mode=False,
     )
 
@@ -48,7 +50,6 @@ def main():
         print("Warning: CUDA is available but 'cpu' is selected. Consider using 'cuda' for better performance.")
     elif device_str == "mps" and not torch.backends.mps.is_available():
         raise ValueError("MPS is not available on this machine. Please set device to 'cpu' or 'cuda'.")
-
     if device_str == "cuda":
         print("Using CUDA for training.")
         device = torch.device("cuda")
@@ -71,28 +72,37 @@ def main():
         env = wrap_env(env)
         env.reset()
         env.seed(seed)
-        train_agent(PPO, env, cfg=None, timesteps=timesteps, seed=seed)
+        train_agent(PPO, env, cfg=None, timesteps=timesteps, seed=seed, device=device)
     # DQN Baseline
     elif agent_name == "DQN":
         timesteps = int(cfg.get("timesteps", 1e6))
         print(f"Training DQN with {timesteps} timesteps")
-        env = wrap_env(env)
+        env = wrap_env(env, wrapper="gym")
         env.reset()
         env.seed(seed)
-        train_agent(DQN, env, cfg=None, timesteps=timesteps, seed=seed)
+        train_agent(DQN, env, cfg=None, timesteps=timesteps, seed=seed, device=device)
     
     # Recurrent PPO with Truncated BPTT
     elif agent_name == "RPPO":
         if not cfg_path:
             raise ValueError("Missing 'agent_config_path' in config for RPPO")
-        agent_cfg = YamlParser(cfg_path).get_config()
-        print(f"Training RPPO with config: \n{agent_cfg}")
-        timestamp = time.time()
-        timestamp = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
-        trainer = PPOTrainer(agent_cfg, run_id=timestamp, device=device)
-        trainer.run_training()
-        trainer.close()
-
+        for path in cfg_path:
+            print(f"Loading config file: {path}")
+            try: 
+                agent_cfg = YamlParser(path).get_config()
+                timestamp = time.time()
+                timestamp = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(timestamp))
+                trainer = PPOTrainer(agent_cfg, run_id=timestamp, device=device)
+                trainer.run_training()
+                trainer.close()
+            except Exception as e:
+                print(f"Error loading config file {path}: {e}")
+                continue
+    elif agent_name == "RPPO2":
+            writer_path = "runs"
+            save_path = "models/"
+            trainer = Trainer(config=get_config(),env=env, writer_path = writer_path,save_path=save_path)
+            trainer.train()
     else:
         raise ValueError(f"Unknown agent: {agent}")
 

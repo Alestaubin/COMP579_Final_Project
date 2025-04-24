@@ -15,6 +15,8 @@ from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
 from agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGym
 from agents.baselines.trainer import load_skrl_agent
 from skrl.envs.wrappers.torch import GymWrapper
+from agents.recurrent_ppo.trainer import Trainer
+from oterl.agents.recurrent_ppo.config_utils import get_config
 
 # Example usage:
 # uv run tester.py --model_path "src/models/2025-04-23-21-25-41_20.nn" --agent "RPPO"
@@ -24,13 +26,22 @@ class AgentTester:
     def __init__(self, model_path, agent_name):
         self.model_path = model_path
         self.agent_name = agent_name.upper()
+
+        self.background_config='rmsc04', 
+        self.starting_cash = 10_000_000,
+        self.timestep_duration="5S",
+        self.order_fixed_size= 20,
+        self.execution_window= "00:30:00",
+        self.parent_order_size= 10_000,
+        self.debug_mode=True
+
         self.env = gym.make('markets-execution-v0',
                    background_config='rmsc04', 
                    starting_cash = 10_000_000,
-                   timestep_duration="1S",
+                   timestep_duration="5S",
                    order_fixed_size= 20,
                    execution_window= "00:30:00",
-                   parent_order_size= 20_000,
+                   parent_order_size= 10_000,
                    debug_mode=True)
 
         # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -58,7 +69,13 @@ class AgentTester:
             # Load model and config
             state_dict, self.config = pickle.load(open(self.model_path, "rb"))
             # the RPPO agent requires a custom wrapper 
-            self.env = AbidesGym(self.env, testing=True)
+            self.env = AbidesGym(
+                   starting_cash = 10_000_000,
+                   timestep_duration="5S",
+                   order_fixed_size= 20,
+                   execution_window= "00:30:00",
+                   parent_order_size= 10_000,
+                   debug_mode=True)
             self.model = ActorCriticModel(self.config, self.env.observation_space, (self.env.action_space.n,))
             self.model.load_state_dict(state_dict)
             self.model.to(self.device)
@@ -69,7 +86,9 @@ class AgentTester:
                 self.recurrent_cell = hxs
             elif self.config["recurrence"]["layer_type"] == "lstm":
                 self.recurrent_cell = (hxs, cxs)
-
+        elif self.agent_name == "RPPO2":              
+            trainer = Trainer(config=get_config(), env=self.env, writer_path=None,save_path=self.model_path)
+            self.agent = trainer.agent
         else:
             raise ValueError(f"Unsupported agent: {self.agent_name}")
     
@@ -102,17 +121,23 @@ class AgentTester:
         max_steps = 10000
         t = 0
         while not done and t < max_steps:
-            action = self.act(state, time_step=t, max_steps=max_steps)
             t += 1
-            if isinstance(self.env, GymWrapper):
-                state, _, terminated, truncated, info = self.env.step(action)
-                done = terminated or truncated
+            if self.agent_name == "RPPO2":
+                state, _, done, info = self.agent.play(state, testing=True)
             else:
-                state, _, done, info = self.env.step(action)
+                action = self.act(state, time_step=t, max_steps=max_steps)
+                if isinstance(self.env, GymWrapper):
+                    state, _, terminated, truncated, info = self.env.step(action)
+                    done = terminated or truncated
+                else:
+                    state, _, done, info = self.env.step(action)
+
             print(info)
 
             self.infos.append(info)
             self.states.append(state)
+        
+        print("Episode finished after {} timesteps".format(t))
     
     #@TODO: Implement metric evaluation
     def evaluate_metrics(self, actions):
@@ -274,7 +299,7 @@ class AgentTester:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, required=True, help="Path to the trained agent model")
-    parser.add_argument('--agent', type=str, required=True, choices=["PPO", "DQN", "RPPO"], help="Agent type")
+    parser.add_argument('--agent', type=str, required=True, choices=["PPO", "DQN", "RPPO", "RPPO2"], help="Agent type")
     args = parser.parse_args()
 
     tester = AgentTester(model_path=args.model_path, agent_name=args.agent)

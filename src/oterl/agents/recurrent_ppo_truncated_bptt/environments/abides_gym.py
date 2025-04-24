@@ -22,19 +22,28 @@ class AbidesGym:
     Overview:
         Wrapper for the Abides-gym environment.
     """
-    def __init__(self, env = None, testing = False):
-        if not env: 
-            self._env = gym.make('markets-execution-v0',
-                   background_config='rmsc04', 
-                   starting_cash = 10_000_000,
-                   timestep_duration="1S",
-                   order_fixed_size= 20,
-                   execution_window= "00:30:00",
-                   parent_order_size= 20_000,
-                   debug_mode=True)
-            print("Using default Abides environment (markets-execution-v0) with config: background_config='rmsc04', starting_cash = 10_000_000, timestep_duration=1S, order_fixed_size= 20, execution_window= 00:30:00, parent_order_size= 20_000, debug_mode=True")
-        else:
+    def __init__(self, 
+                starting_cash = 10_000_000,
+                timestep_duration = "5S",
+                order_fixed_size = 20,
+                execution_window = "00:30:00",
+                parent_order_size = 10_000,
+                debug_mode = True,
+                testing = True,
+                env=None,
+                ):
+        if env is not None:
             self._env = env
+        else:
+            self._env = gym.make('markets-execution-v0',
+                    background_config='rmsc04', 
+                    starting_cash = starting_cash,
+                    timestep_duration= timestep_duration,
+                    order_fixed_size= order_fixed_size,
+                    execution_window= execution_window,
+                    parent_order_size= parent_order_size,
+                    debug_mode= debug_mode)
+            print(f"Using Abides environment (markets-execution-v0) with config: background_config='rmsc04', starting_cash = {starting_cash}, timestep_duration={timestep_duration}, order_fixed_size= {order_fixed_size}, execution_window= {execution_window}, parent_order_size= {parent_order_size}, debug_mode={debug_mode}")
         self._env = SqueezeObsWrapper(self._env)
         self.testing = testing
 
@@ -62,7 +71,8 @@ class AbidesGym:
                         "length": len(self._rewards)}
             else:
                 info = None
-
+        penalty = (1-obs[0])**2 
+        reward -= penalty
         return obs, reward, done, info
 
     def render(self):

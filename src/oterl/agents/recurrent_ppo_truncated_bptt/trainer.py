@@ -23,6 +23,7 @@ class PPOTrainer:
         """
         # Set variables
         self.config = config
+        print("Using config: ", config)
         self.recurrence = config["recurrence"]
         self.device = device
         self.run_id = run_id
@@ -124,9 +125,6 @@ class PPOTrainer:
             
             if update % 10 == 0:
                 self._save_model(update_num=update)
-
-        # Save the trained model at the end of the training
-        self._save_model()
 
     def _sample_training_data(self) -> list:
         """Runs all n workers for n steps to sample training data.

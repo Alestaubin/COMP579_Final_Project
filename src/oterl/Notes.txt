@@ -1,0 +1,8 @@
+
+Best RPPO:
+
+uv run tester.py --model_path "../models/2025-04-24-11-41-33_10.nn" --agent "RPPO"
+
+
+The reward when the episode ends and that not all funds have been bought is very big negative, to ensure the agent knows to buy all actions before the end. 
+So, we need to make sure that reward is included in the training data.

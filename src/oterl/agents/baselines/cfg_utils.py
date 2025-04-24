@@ -1,4 +1,5 @@
 from skrl.agents.torch.ppo import PPO, PPO_DEFAULT_CONFIG
+from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
 from skrl.resources.preprocessors.torch import RunningStandardScaler
 from skrl.resources.schedulers.torch import KLAdaptiveRL
 
@@ -30,3 +31,17 @@ def get_ppo_cartpole_cfg(env, device):
   cfg['experiment']['checkpoint_interval'] = 5000
   cfg['experiment']['directory'] = 'runs/torch/CartPole'
   return cfg
+
+def get_dqn_cfg():
+    cfg = DQN_DEFAULT_CONFIG.copy()
+    cfg['learning_starts'] = (
+      10_000  # Start learning after 10k steps: fill the experience replay buffer
+    )
+    cfg['learning_starts'] = 100
+    cfg['exploration']['final_epsilon'] = 0.04
+    cfg['exploration']['timesteps'] = 1500
+    # tensorboard logging and checkpoints
+    cfg['experiment']['write_interval'] = 1000
+    cfg['experiment']['checkpoint_interval'] = 50000
+    cfg['experiment']['directory'] = 'runs/torch/CartPole'
+    return cfg
