@@ -1,5 +1,5 @@
-from oterl.agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGym
-from oterl.agents.recurrent_ppo_truncated_bptt.environments.cartpole_env import CartPole
+from agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGym
+from agents.recurrent_ppo_truncated_bptt.environments.cartpole_env import CartPole
 
 def create_env(config:dict, render:bool=False):
     """Initializes an environment based on the provided environment name.

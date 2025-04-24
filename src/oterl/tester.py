@@ -7,16 +7,21 @@ from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.ppo import PPO as SKRL_PPO
 from skrl.agents.torch.dqn import DQN as SKRL_DQN
 import pickle
-from oterl.agents.recurrent_ppo_truncated_bptt.utils import create_env
-from oterl.agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
+from agents.recurrent_ppo_truncated_bptt.utils import create_env
+from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.dqn import DQN, DQN_DEFAULT_CONFIG
 from skrl.agents.torch.ppo import PPO
-from oterl.agents.TWAP import TWAPAgent
+from agents.TWAP import TWAPAgent
 from skrl.utils.model_instantiators.torch import deterministic_model
+<<<<<<< HEAD
 from oterl.agents.baselines.skrl_models import Policy, Value
 from oterl.agents.baselines.cfg_utils import get_ppo_cartpole_cfg
 from oterl.agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGym
+=======
+from agents.baselines.skrl_models import Policy, Value
+from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
+>>>>>>> refs/remotes/origin/AddMetrics
 
 # Example usage:
 # uv run tester.py --model_path "../models/my_run.nn" --agent "RPPO"
@@ -138,7 +143,7 @@ class AgentTester:
 
             self.infos.append(info)
             self.states.append(state)
-            
+    
     #@TODO: Implement metric evaluation
     def evaluate_metrics(self):
         """
