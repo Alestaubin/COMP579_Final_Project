@@ -5,11 +5,16 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from datetime import datetime, timedelta
+from agents.recurrent_ppo_truncated_bptt.utils import create_env
 from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.dqn import DQN
 from skrl.agents.torch.ppo import PPO
 from agents.TWAP import TWAPAgent
+from skrl.utils.model_instantiators.torch import deterministic_model
+from agents.baselines.skrl_models import Policy, Value
+from agents.baselines.cfg_utils import get_ppo_cartpole_cfg
 from agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGym
 from agents.baselines.trainer import load_skrl_agent
 from skrl.envs.wrappers.torch import GymWrapper
@@ -49,11 +54,11 @@ class AgentTester:
         torch.set_default_tensor_type('torch.FloatTensor')
 
         # TWAP-specific parameters (will leave as the default environment set up)
-        self.total_shares = 20000  # number of shares that need to be executed by the agent
-        self.execution_window_sec = (
-        1800  # number of time steps available to our agent to execute the entire order
-        )
-        self.time_discretization = 30  # TWAP executes trades at every 30 seconds
+        self.total_shares = 20000 # number of shares that need to be executed by the agent
+        self.execution_window_sec = 1800 # number of time steps available to our agent to execute the entire order
+        self.time_discretization = 30 # TWAP executes trades at every 30 seconds
+        self.actual_order_size = 20 # this will be used by TWAP since it does not use the fixed_order_size
+        self.parent_order_size = 20000
 
         self.load_agent()
 
@@ -103,9 +108,16 @@ class AgentTester:
             for action_branch in policy:
                 action.append(action_branch.sample().item())
             return action
-        elif self.agent_name == 'TWAP':
-            current_time_sec = state['current_time'][-1] / 1e9  # converting ns array to seconds
-            return self.agent.get_action(current_time_sec)
+        elif self.agent_name == "TWAP":
+            # print("state: ", state) # debugging
+            time_pct = state[1]
+            shares_to_execute = self.agent.get_action(time_pct)
+            
+            if shares_to_execute > 0:
+                # For TWAP: Modify the environment's order size dynamically
+                self.env.unwrapped.order_fixed_size = shares_to_execute
+                return 0  # Market buy
+            return 2  # Hold
         else:
             return self.agent.act(state, timestep=time_step, timesteps=max_steps)[0]
 
@@ -383,8 +395,6 @@ class AgentTester:
 
 
     def test(self):
-        # self.run_episode()
-        # self.evaluate_metrics()
 
         # evaluating metrics of the agent and printing plots
         self.run_episode()
@@ -402,7 +412,7 @@ class AgentTester:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, required=True, help="Path to the trained agent model")
-    parser.add_argument('--agent', type=str, required=True, choices=["PPO", "DQN", "RPPO", "RPPO2"], help="Agent type")
+    parser.add_argument('--agent', type=str, required=True, choices=["PPO", "DQN", "RPPO", "RPPO2", "TWAP"], help="Agent type")
     args = parser.parse_args()
 
     tester = AgentTester(model_path=args.model_path, agent_name=args.agent)
