@@ -14,7 +14,7 @@ from skrl.envs.wrappers.torch import GymWrapper
 from agents.recurrent_ppo.trainer import Trainer
 from oterl.agents.recurrent_ppo.config_utils import get_config
 import matplotlib.pyplot as plt
-
+from datetime import datetime, timedelta
 # Example usage:
 # uv run tester.py --model_path "src/models/2025-04-23-21-25-41_20.nn" --agent "RPPO"
 # uv run tester.py --model_path "../runs/torch/CartPole/25-04-23_18-12-48-540371_PPO/checkpoints/best_agent.pt" --agent "PPO"
@@ -108,6 +108,16 @@ class AgentTester:
             return self.agent.act(state, timestep=time_step, timesteps=max_steps)[0]
 
     def run_episode(self):
+        print(self.env)
+        if isinstance(self.env, GymWrapper):
+            state, _ = self.env.reset()
+        else:
+            state = self.env.reset()
+        print("Initial state:", state)
+        done = False
+        self.states = []
+        self.infos = []
+
         max_steps = 10000
         t = 0
         while not done and t < max_steps:
@@ -128,6 +138,7 @@ class AgentTester:
             self.states.append(state)
         
         print("Episode finished after {} timesteps".format(t))
+    
     
     def evaluate_metrics(self, actions):
         """
