@@ -3,6 +3,8 @@ import torch
 import gym
 import numpy as np
 import pickle
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from agents.recurrent_ppo_truncated_bptt.model import ActorCriticModel
 from skrl.envs.wrappers.torch import wrap_env
 from skrl.agents.torch.dqn import DQN
@@ -12,7 +14,7 @@ from agents.recurrent_ppo_truncated_bptt.environments.abides_gym import AbidesGy
 from agents.baselines.trainer import load_skrl_agent
 from skrl.envs.wrappers.torch import GymWrapper
 from agents.recurrent_ppo.trainer import Trainer
-from oterl.agents.recurrent_ppo.config_utils import get_config
+from agents.recurrent_ppo.config_utils import get_config
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 # Example usage:
@@ -25,12 +27,12 @@ class AgentTester:
         self.model_path = model_path
         self.agent_name = agent_name.upper()
 
-        self.background_config='rmsc04', 
-        self.starting_cash = 10_000_000,
-        self.timestep_duration="5S",
-        self.order_fixed_size= 20,
-        self.execution_window= "00:30:00",
-        self.parent_order_size= 10_000,
+        self.background_config='rmsc04' 
+        self.starting_cash = 10_000_000
+        self.timestep_duration="5S"
+        self.order_fixed_size= 20
+        self.execution_window= "00:30:00"
+        self.parent_order_size= 10_000
         self.debug_mode=True
 
         self.env = gym.make('markets-execution-v0',

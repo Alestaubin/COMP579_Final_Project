@@ -10,10 +10,10 @@ from tqdm import tqdm
 torch.manual_seed(9999)
 np.random.seed(9999)
 
-from oterl.agents.recurrent_ppo.model import LSTMPPOModel
-from oterl.agents.recurrent_ppo.agent import Agent
-from oterl.agents.recurrent_ppo.writer import Writer
-from oterl.agents.recurrent_ppo.distribution import Distribution
+from agents.recurrent_ppo.model import LSTMPPOModel
+from agents.recurrent_ppo.agent import Agent
+from agents.recurrent_ppo.writer import Writer
+from agents.recurrent_ppo.distribution import Distribution
 
 
 class Trainer:

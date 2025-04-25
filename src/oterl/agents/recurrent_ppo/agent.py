@@ -1,9 +1,9 @@
 import torch
 import torch.nn.functional as F
 import numpy as np
-from oterl.agents.recurrent_ppo.rolloutBuffer import RolloutBuffer
-from oterl.agents.recurrent_ppo.distribution import Distribution
-from oterl.agents.recurrent_ppo.stat import RunningMeanStd
+from agents.recurrent_ppo.rolloutBuffer import RolloutBuffer
+from agents.recurrent_ppo.distribution import Distribution
+from agents.recurrent_ppo.stat import RunningMeanStd
 from tqdm import tqdm
 
 class Agent():
